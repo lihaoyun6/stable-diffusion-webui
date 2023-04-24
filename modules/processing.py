@@ -774,10 +774,11 @@ def old_hires_fix_first_pass_dimensions(width, height):
 class StableDiffusionProcessingTxt2Img(StableDiffusionProcessing):
     sampler = None
 
-    def __init__(self, enable_hr: bool = False, denoising_strength: float = 0.75, firstphase_width: int = 0, firstphase_height: int = 0, hr_scale: float = 2.0, hr_upscaler: str = None, hr_second_pass_steps: int = 0, hr_resize_x: int = 0, hr_resize_y: int = 0, **kwargs):
+    def __init__(self, enable_hr: bool = False, denoising_strength: float = 0.75, firstphase_width: int = 0, firstphase_height: int = 0, hr_cfg: float = 0.0, hr_scale: float = 2.0, hr_upscaler: str = None, hr_second_pass_steps: int = 0, hr_resize_x: int = 0, hr_resize_y: int = 0, **kwargs):
         super().__init__(**kwargs)
         self.enable_hr = enable_hr
         self.denoising_strength = denoising_strength
+        self.hr_cfg = hr_cfg
         self.hr_scale = hr_scale
         self.hr_upscaler = hr_upscaler
         self.hr_second_pass_steps = hr_second_pass_steps
@@ -851,7 +852,10 @@ class StableDiffusionProcessingTxt2Img(StableDiffusionProcessing):
                 shared.total_tqdm.updateTotal((self.steps + (self.hr_second_pass_steps or self.steps)) * state.job_count)
                 state.job_count = state.job_count * 2
                 state.processing_has_refined_job_count = True
-
+            
+            if self.hr_cfg:
+                self.extra_generation_params["Hires CFG"] = self.hr_cfg
+            
             if self.hr_second_pass_steps:
                 self.extra_generation_params["Hires steps"] = self.hr_second_pass_steps
 
@@ -937,7 +941,10 @@ class StableDiffusionProcessingTxt2Img(StableDiffusionProcessing):
         # GC now before running the next img2img to prevent running out of memory
         x = None
         devices.torch_gc()
-
+        
+        if self.hr_cfg != 0:
+            self.cfg_scale = self.hr_cfg
+        
         samples = self.sampler.sample_img2img(self, samples, noise, conditioning, unconditional_conditioning, steps=self.hr_second_pass_steps or self.steps, image_conditioning=image_conditioning)
 
         return samples
