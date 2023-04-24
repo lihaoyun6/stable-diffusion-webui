@@ -945,6 +945,7 @@ class StableDiffusionProcessingTxt2Img(StableDiffusionProcessing):
         x = None
         devices.torch_gc()
         
+        cfg_scale_bak = self.cfg_scale
         if self.hr_cfg != 0:
             self.cfg_scale = self.hr_cfg
         
@@ -953,7 +954,7 @@ class StableDiffusionProcessingTxt2Img(StableDiffusionProcessing):
             steps=None
         
         samples = self.sampler.sample_img2img(self, samples, noise, conditioning, unconditional_conditioning, steps=steps, image_conditioning=image_conditioning)
-
+        self.cfg_scale = cfg_scale_bak
         return samples
 
 
