@@ -204,6 +204,7 @@ axis_options = [
     AxisOption("Var. seed", int, apply_field("subseed")),
     AxisOption("Var. strength", float, apply_field("subseed_strength")),
     AxisOption("Steps", int, apply_field("steps")),
+    AxisOptionTxt2Img("Hires CFG", float, apply_field("hr_cfg")),
     AxisOptionTxt2Img("Hires steps", int, apply_field("hr_second_pass_steps")),
     AxisOption("CFG Scale", float, apply_field("cfg_scale")),
     AxisOptionImg2Img("Image CFG Scale", float, apply_field("image_cfg_scale")),
