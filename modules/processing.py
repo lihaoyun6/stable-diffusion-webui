@@ -774,10 +774,11 @@ def old_hires_fix_first_pass_dimensions(width, height):
 class StableDiffusionProcessingTxt2Img(StableDiffusionProcessing):
     sampler = None
 
-    def __init__(self, enable_hr: bool = False, denoising_strength: float = 0.75, firstphase_width: int = 0, firstphase_height: int = 0, hr_cfg: float = 0.0, hr_scale: float = 2.0, hr_upscaler: str = None, hr_second_pass_steps: int = 0, hr_resize_x: int = 0, hr_resize_y: int = 0, **kwargs):
+    def __init__(self, enable_hr: bool = False, denoising_strength: float = 0.75, firstphase_width: int = 0, firstphase_height: int = 0, hr_sampler: str = None, hr_cfg: float = 0.0, hr_scale: float = 2.0, hr_upscaler: str = None, hr_second_pass_steps: int = 0, hr_resize_x: int = 0, hr_resize_y: int = 0, **kwargs):
         super().__init__(**kwargs)
         self.enable_hr = enable_hr
         self.denoising_strength = denoising_strength
+        self.hr_sampler = hr_sampler
         self.hr_cfg = hr_cfg
         self.hr_scale = hr_scale
         self.hr_upscaler = hr_upscaler
@@ -809,9 +810,10 @@ class StableDiffusionProcessingTxt2Img(StableDiffusionProcessing):
                 self.applied_old_hires_behavior_to = (self.width, self.height)
 
             if self.hr_resize_x == 0 and self.hr_resize_y == 0:
-                self.extra_generation_params["Hires upscale"] = self.hr_scale
-                self.hr_upscale_to_x = int(self.width * self.hr_scale)
-                self.hr_upscale_to_y = int(self.height * self.hr_scale)
+                if self.hr_scale != None:
+                    self.extra_generation_params["Hires upscale"] = self.hr_scale
+                    self.hr_upscale_to_x = int(self.width * self.hr_scale)
+                    self.hr_upscale_to_y = int(self.height * self.hr_scale)
             else:
                 self.extra_generation_params["Hires resize"] = f"{self.hr_resize_x}x{self.hr_resize_y}"
 
@@ -856,6 +858,9 @@ class StableDiffusionProcessingTxt2Img(StableDiffusionProcessing):
                 state.job_count = state.job_count * 2
                 state.processing_has_refined_job_count = True
             
+            if self.hr_sampler and self.hr_sampler != "Use main sampler" and self.hr_sampler != self.sampler_name:
+                self.extra_generation_params["Hires sampler"] = self.hr_sampler
+
             if self.hr_cfg:
                 self.extra_generation_params["Hires CFG"] = self.hr_cfg
             
@@ -933,8 +938,12 @@ class StableDiffusionProcessingTxt2Img(StableDiffusionProcessing):
         shared.state.nextjob()
 
         img2img_sampler_name = self.sampler_name
-        if self.sampler_name in ['PLMS', 'UniPC']:  # PLMS/UniPC do not support img2img so we just silently switch to DDIM
-            img2img_sampler_name = 'DDIM'
+        if self.hr_sampler == 'Use main sampler':
+            if self.sampler_name in ['PLMS', 'UniPC']:  # PLMS/UniPC do not support img2img so we just silently switch to DDIM
+                img2img_sampler_name = 'DDIM'
+        else:
+            img2img_sampler_name = self.hr_sampler
+
         self.sampler = sd_samplers.create_sampler(img2img_sampler_name, self.sd_model)
 
         samples = samples[:, :, self.truncate_y//2:samples.shape[2]-(self.truncate_y+1)//2, self.truncate_x//2:samples.shape[3]-(self.truncate_x+1)//2]

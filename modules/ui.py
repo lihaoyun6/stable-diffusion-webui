@@ -19,7 +19,7 @@ import numpy as np
 from PIL import Image, PngImagePlugin
 from modules.call_queue import wrap_gradio_gpu_call, wrap_queued_call, wrap_gradio_call
 
-from modules import sd_hijack, sd_models, localization, script_callbacks, ui_extensions, deepbooru, sd_vae, extra_networks, postprocessing, ui_components, ui_common, ui_postprocessing
+from modules import sd_hijack, sd_models, sd_samplers_common, localization, script_callbacks, ui_extensions, deepbooru, sd_vae, extra_networks, postprocessing, ui_components, ui_common, ui_postprocessing
 from modules.ui_components import FormRow, FormColumn, FormGroup, ToolButton, FormHTML
 from modules.paths import script_path, data_path
 
@@ -497,6 +497,8 @@ def create_ui():
                                 denoising_strength = gr.Slider(minimum=0.0, maximum=1.0, step=0.01, label='Denoising strength', value=0.7, elem_id="txt2img_denoising_strength")
 
                             with FormRow(elem_id="txt2img_hires_fix_row2", variant="compact"):
+                                hires_samplers = [sd_samplers_common.SamplerData(name='Use main sampler', constructor=None, aliases=None, options=None)] + samplers_for_img2img
+                                hr_sampler_index = gr.Dropdown(label='Hires Sampling method', elem_id=f"hires_sampling", choices=[x.name for x in hires_samplers], value=hires_samplers[0].name, type="index", interactive=True)
                                 hr_scale = gr.Slider(minimum=1.0, maximum=4.0, step=0.05, label="Upscale by", value=2.0, elem_id="txt2img_hr_scale")
                                 hr_resize_x = gr.Slider(minimum=0, maximum=2048, step=8, label="Resize width to", value=0, elem_id="txt2img_hr_resize_x")
                                 hr_resize_y = gr.Slider(minimum=0, maximum=2048, step=8, label="Resize height to", value=0, elem_id="txt2img_hr_resize_y")
@@ -546,6 +548,7 @@ def create_ui():
                     txt2img_prompt_styles,
                     steps,
                     sampler_index,
+                    hr_sampler_index,
                     restore_faces,
                     tiling,
                     batch_count,
@@ -603,6 +606,7 @@ def create_ui():
                 (txt2img_negative_prompt, "Negative prompt"),
                 (steps, "Steps"),
                 (sampler_index, "Sampler"),
+                (hr_sampler_index, "Hires sampler index"),
                 (restore_faces, "Face restoration"),
                 (cfg_scale, "CFG scale"),
                 (seed, "Seed"),
