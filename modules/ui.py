@@ -512,7 +512,7 @@ def create_ui():
                     elif category == "override_settings":
                         with FormRow(elem_id="txt2img_override_settings_row") as row:
                             override_settings = create_override_settings_dropdown('txt2img', row)
-
+                    
                     elif category == "scripts":
                         with FormGroup(elem_id="txt2img_script_container"):
                             custom_inputs = modules.scripts.scripts_txt2img.setup_ui()
@@ -606,7 +606,7 @@ def create_ui():
                 (txt2img_negative_prompt, "Negative prompt"),
                 (steps, "Steps"),
                 (sampler_index, "Sampler"),
-                (hr_sampler_index, "Hires sampler index"),
+                (hr_sampler_index, "Hires Sampler"),
                 (restore_faces, "Face restoration"),
                 (cfg_scale, "CFG scale"),
                 (seed, "Seed"),
