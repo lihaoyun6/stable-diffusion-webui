@@ -606,7 +606,7 @@ def create_ui():
                 (txt2img_negative_prompt, "Negative prompt"),
                 (steps, "Steps"),
                 (sampler_index, "Sampler"),
-                (hr_sampler_index, "Hires Sampler"),
+                (hr_sampler_index, "Hires sampler"),
                 (restore_faces, "Face restoration"),
                 (cfg_scale, "CFG scale"),
                 (seed, "Seed"),
