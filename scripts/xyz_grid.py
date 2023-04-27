@@ -74,6 +74,13 @@ def apply_sampler(p, x, xs):
         raise RuntimeError(f"Unknown sampler: {x}")
 
     p.sampler_name = sampler_name
+    
+def apply_hr_sampler(p, x, xs):
+    hr_sampler = sd_samplers.samplers_map.get(x.lower(), None)
+    if hr_sampler is None:
+        raise RuntimeError(f"Unknown sampler: {x}")
+        
+    p.hr_sampler = hr_sampler
 
 
 def confirm_samplers(p, xs):
@@ -204,6 +211,7 @@ axis_options = [
     AxisOption("Var. seed", int, apply_field("subseed")),
     AxisOption("Var. strength", float, apply_field("subseed_strength")),
     AxisOption("Steps", int, apply_field("steps")),
+    AxisOptionTxt2Img("Hires sampler", str, apply_hr_sampler, format_value=format_value, confirm=confirm_samplers, choices=lambda: [x.name for x in sd_samplers.samplers_for_img2img]),
     AxisOptionTxt2Img("Hires CFG", float, apply_field("hr_cfg")),
     AxisOptionTxt2Img("Hires steps", int, apply_field("hr_second_pass_steps")),
     AxisOption("CFG Scale", float, apply_field("cfg_scale")),
@@ -684,3 +692,4 @@ class Script(scripts.Script):
                 del processed.infotexts[1]
 
         return processed
+    
