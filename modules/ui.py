@@ -1880,6 +1880,8 @@ def javascript_html():
         inline += f"set_theme('{cmd_opts.theme}');"
 
     for script in modules.scripts.list_scripts("javascript", ".js"):
+        if shared.opts.disable_gamepad and script.filename == "imageviewerGamepad.js":
+            continue
         head += f'<script type="text/javascript" src="{webpath(script.path)}"></script>\n'
 
     for script in modules.scripts.list_scripts("javascript", ".mjs"):
