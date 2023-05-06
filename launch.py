@@ -6,6 +6,7 @@ import importlib.util
 import shlex
 import platform
 import json
+from shutil import rmtree
 
 from modules import cmd_args
 from modules.paths_internal import script_path, extensions_dir
@@ -139,6 +140,11 @@ def git_clone(url, dir, name, commithash=None):
         if commithash is None:
             return
 
+        current_url = run(f'"{git}" -C "{dir}" config --get remote.origin.url', None, f"Couldn't determine {name}'s remote url").strip()
+        if current_url != url:
+            print(f"Removing installed {name}...")
+            rmtree(dir, ignore_errors=True)
+            git_clone(url, dir, name, commithash)
         current_hash = run(f'"{git}" -C "{dir}" rev-parse HEAD', None, f"Couldn't determine {name}'s hash: {commithash}").strip()
         if current_hash == commithash:
             return
@@ -225,7 +231,7 @@ def prepare_environment():
     torch_command = os.environ.get('TORCH_COMMAND', "pip install torch==2.0.0 torchvision==0.15.1 --extra-index-url https://download.pytorch.org/whl/cu118")
     requirements_file = os.environ.get('REQS_FILE', "requirements_versions.txt")
 
-    xformers_package = os.environ.get('XFORMERS_PACKAGE', 'xformers==0.0.17')
+    xformers_package = os.environ.get('XFORMERS_PACKAGE', 'xformers==0.0.19')
     gfpgan_package = os.environ.get('GFPGAN_PACKAGE', "git+https://github.com/TencentARC/GFPGAN.git@8d2447a2d918f8eba5a4a01463fd48e45126a379")
     clip_package = os.environ.get('CLIP_PACKAGE', "git+https://github.com/openai/CLIP.git@d50d76daa670286dd6cacf3bcd80b5e4823fc8e1")
     openclip_package = os.environ.get('OPENCLIP_PACKAGE', "git+https://github.com/mlfoundations/open_clip.git@bb6e834e9c70d9c27d0dc3ecedeebeaeb1ffad6b")
@@ -233,12 +239,16 @@ def prepare_environment():
     stable_diffusion_repo = os.environ.get('STABLE_DIFFUSION_REPO', "https://github.com/Stability-AI/stablediffusion.git")
     taming_transformers_repo = os.environ.get('TAMING_TRANSFORMERS_REPO', "https://github.com/CompVis/taming-transformers.git")
     k_diffusion_repo = os.environ.get('K_DIFFUSION_REPO', 'https://github.com/crowsonkb/k-diffusion.git')
+    if args.better_kdiffusion:
+        k_diffusion_repo = os.environ.get('K_DIFFUSION_REPO', 'https://github.com/wywywywy/k-diffusion.git')
     codeformer_repo = os.environ.get('CODEFORMER_REPO', 'https://github.com/sczhou/CodeFormer.git')
     blip_repo = os.environ.get('BLIP_REPO', 'https://github.com/salesforce/BLIP.git')
 
     stable_diffusion_commit_hash = os.environ.get('STABLE_DIFFUSION_COMMIT_HASH', "cf1d67a6fd5ea1aa600c4df58e5b47da45f6bdbf")
     taming_transformers_commit_hash = os.environ.get('TAMING_TRANSFORMERS_COMMIT_HASH', "24268930bf1dce879235a7fddd0b2355b84d7ea6")
     k_diffusion_commit_hash = os.environ.get('K_DIFFUSION_COMMIT_HASH', "5b3af030dd83e0297272d861c19477735d0317ec")
+    if args.better_kdiffusion:
+        k_diffusion_commit_hash = os.environ.get('K_DIFFUSION_COMMIT_HASH', "e3f853a8c9f70052aa1c4bb8cd0e4ec3af7ffaff")
     codeformer_commit_hash = os.environ.get('CODEFORMER_COMMIT_HASH', "c5b4593074ba6214284d6acd5f1719b6c5d739af")
     blip_commit_hash = os.environ.get('BLIP_COMMIT_HASH', "48211a1594f1321b00f14c9f7a5b4813144b2fb9")
 
