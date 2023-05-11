@@ -288,7 +288,7 @@ def create_toprow(is_img2img):
             with gr.Column(elem_id=f"{id_part}_pnginfo_container"):
                 with gr.Row().style(equal_height=True):
                     image = gr.Image(elem_id="pnginfo_image", label="Source", source="upload", interactive=True, type="pil")
-            generation_info = gr.Textbox(visible=False, elem_id="pnginfo_generation_info")
+            png_generation_info = gr.Textbox(visible=False, elem_id="pnginfo_generation_info")
             image.change(
                 fn=wrap_gradio_call(modules.extras.run_pnginfo),
                 inputs=[image],
@@ -300,7 +300,7 @@ def create_toprow(is_img2img):
                     buttons = parameters_copypaste.create_buttons(["txt2img", "img2img", "inpaint", "extras"])
                     for tabname, button in buttons.items():
                         parameters_copypaste.register_paste_params_button(parameters_copypaste.ParamBinding(
-                            paste_button=button, tabname=tabname, source_text_component=generation_info, source_image_component=image,
+                            paste_button=button, tabname=tabname, source_text_component=png_generation_info, source_image_component=image,
                     ))
 
             with gr.Row():

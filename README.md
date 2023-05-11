@@ -6,9 +6,11 @@ Changes:
 
 1. Add options `Hires CFG` and `Hires sampler` to control the `CFG Scale` and `Sampling method` of img2img stage of Hires.fix  
 2. Add a cmd arg `--better-kdiffusion` to use wywywywy's k-diffusion fork instead of the original repository. It can improve the output of `DPM++ 2M` and `DPM++ 2M Karras` sampler  
-3. Add a option `Disable gamepad optimization for image viewer` in `User interface` to disable webui's gamepad optimization for trackpad/touchpad
+3. Add an option `Disable gamepad optimization for image viewer` in `User interface` to disable webui's gamepad optimization for trackpad/touchpad
 4. Allow Hires.fix to reduce the steps of img2img stage (based on `Denoising` value)  
 5. Set the default version of `xformers` to 0.0.19 (you can use the cmd arg `--reinstall-xformers` to upgrade)  
+6. Add an option `Show "PNG Info" block in txt2img and img2img tabs (requires restart)` in `User interface` to allow users to embed pnginfo blocks into txt2img and img2img tabs  
+7. Add ToMe(tomesd) support for `txt2img`/`img2img` and can also be applied only to `Hires. fix`  
 
 # Stable Diffusion web UI
 A browser interface based on Gradio library for Stable Diffusion.
