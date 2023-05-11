@@ -284,7 +284,25 @@ def create_toprow(is_img2img):
     id_part = "img2img" if is_img2img else "txt2img"
 
     with gr.Row(elem_id=f"{id_part}_toprow", variant="compact"):
+        if shared.opts.embedded_pnginfo:
+            with gr.Column(elem_id=f"{id_part}_pnginfo_container"):
+                with gr.Row().style(equal_height=True):
+                    image = gr.Image(elem_id="pnginfo_image", label="Source", source="upload", interactive=True, type="pil")
+            generation_info = gr.Textbox(visible=False, elem_id="pnginfo_generation_info")
+            image.change(
+                fn=wrap_gradio_call(modules.extras.run_pnginfo),
+                inputs=[image],
+            )
+
         with gr.Column(elem_id=f"{id_part}_prompt_container", scale=6):
+            if shared.opts.embedded_pnginfo:
+                with gr.Row():
+                    buttons = parameters_copypaste.create_buttons(["txt2img", "img2img", "inpaint", "extras"])
+                    for tabname, button in buttons.items():
+                        parameters_copypaste.register_paste_params_button(parameters_copypaste.ParamBinding(
+                            paste_button=button, tabname=tabname, source_text_component=generation_info, source_image_component=image,
+                    ))
+
             with gr.Row():
                 with gr.Column(scale=80):
                     with gr.Row():
