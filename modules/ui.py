@@ -64,7 +64,9 @@ if cmd_opts.ngrok is not None:
 
 
 def gr_show(visible=True, n=1):
-    return [{"visible": visible, "__type__": "update"}] * n
+    if n > 1:
+        return [{"visible": visible, "__type__": "update"}] * n
+    return {"visible": visible, "__type__": "update"}
 
 
 sample_img2img = "assets/stable-samples/img2img/sketch-mountains-input.jpg"
@@ -287,11 +289,14 @@ def create_toprow(is_img2img):
         if shared.opts.embedded_pnginfo:
             with gr.Column(elem_id=f"{id_part}_pnginfo_container"):
                 with gr.Row().style(equal_height=True):
-                    image = gr.Image(elem_id="pnginfo_image", label="Source", source="upload", interactive=True, type="pil")
-            png_generation_info = gr.Textbox(visible=False, elem_id="pnginfo_generation_info")
+                    image = gr.Image(elem_id="_pnginfo_image", label="Source", source="upload", interactive=True, type="pil")
+            html = gr.HTML(visible=False)
+            png_generation_info = gr.Textbox(visible=False, elem_id="_pnginfo_generation_info")
+            html2 = gr.HTML(visible=False)
             image.change(
                 fn=wrap_gradio_call(modules.extras.run_pnginfo),
                 inputs=[image],
+                outputs=[html,png_generation_info,html2],
             )
 
         with gr.Column(elem_id=f"{id_part}_prompt_container", scale=6):
