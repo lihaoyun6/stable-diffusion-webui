@@ -13,6 +13,7 @@ import cv2
 from skimage import exposure
 from typing import Any, Dict, List, Optional
 
+from modules.tome import apply_tome, remove_tome
 import modules.sd_hijack
 from modules import devices, prompt_parser, masking, sd_samplers, lowvram, generation_parameters_copypaste, script_callbacks, extra_networks, sd_vae_approx, scripts
 from modules.sd_hijack import model_hijack
@@ -106,7 +107,7 @@ class StableDiffusionProcessing:
     """
     The first set of paramaters: sd_models -> do_not_reload_embeddings represent the minimum required to create a StableDiffusionProcessing
     """
-    def __init__(self, sd_model=None, outpath_samples=None, outpath_grids=None, prompt: str = "", styles: List[str] = None, seed: int = -1, subseed: int = -1, subseed_strength: float = 0, seed_resize_from_h: int = -1, seed_resize_from_w: int = -1, seed_enable_extras: bool = True, sampler_name: str = None, batch_size: int = 1, n_iter: int = 1, steps: int = 50, cfg_scale: float = 7.0, width: int = 512, height: int = 512, restore_faces: bool = False, tiling: bool = False, do_not_save_samples: bool = False, do_not_save_grid: bool = False, extra_generation_params: Dict[Any, Any] = None, overlay_images: Any = None, negative_prompt: str = None, eta: float = None, do_not_reload_embeddings: bool = False, denoising_strength: float = 0, ddim_discretize: str = None, s_min_uncond: float = 0.0, s_churn: float = 0.0, s_tmax: float = None, s_tmin: float = 0.0, s_noise: float = 1.0, override_settings: Dict[str, Any] = None, override_settings_restore_afterwards: bool = True, sampler_index: int = None, script_args: list = None):
+    def __init__(self, sd_model=None, outpath_samples=None, outpath_grids=None, prompt: str = "", styles: List[str] = None, seed: int = -1, subseed: int = -1, subseed_strength: float = 0, seed_resize_from_h: int = -1, seed_resize_from_w: int = -1, seed_enable_extras: bool = True, sampler_name: str = None, batch_size: int = 1, n_iter: int = 1, steps: int = 50, cfg_scale: float = 7.0, width: int = 512, height: int = 512, restore_faces: bool = False, tiling: bool = False, enable_tome: bool = False, enable_hr_tome: bool = False, do_not_save_samples: bool = False, do_not_save_grid: bool = False, extra_generation_params: Dict[Any, Any] = None, overlay_images: Any = None, negative_prompt: str = None, eta: float = None, do_not_reload_embeddings: bool = False, denoising_strength: float = 0, ddim_discretize: str = None, s_min_uncond: float = 0.0, s_churn: float = 0.0, s_tmax: float = None, s_tmin: float = 0.0, s_noise: float = 1.0, override_settings: Dict[str, Any] = None, override_settings_restore_afterwards: bool = True, sampler_index: int = None, script_args: list = None):
         if sampler_index is not None:
             print("sampler_index argument for StableDiffusionProcessing does not do anything; use sampler_name", file=sys.stderr)
 
@@ -130,6 +131,8 @@ class StableDiffusionProcessing:
         self.height: int = height
         self.restore_faces: bool = restore_faces
         self.tiling: bool = tiling
+        self.enable_tome: bool = enable_tome
+        self.enable_hr_tome: bool = enable_hr_tome
         self.do_not_save_samples: bool = do_not_save_samples
         self.do_not_save_grid: bool = do_not_save_grid
         self.extra_generation_params: dict = extra_generation_params or {}
@@ -512,9 +515,17 @@ def process_images(p: StableDiffusionProcessing) -> Processed:
             if k == 'sd_vae':
                 sd_vae.reload_vae_weights()
 
+        if p.enable_tome:
+            print("Applying ToMe patch...")
+            apply_tome(sd_model=p.sd_model, hires=False)
+
         res = process_images_inner(p)
 
     finally:
+        if p.enable_tome:
+            print("Removing ToMe patch...")
+            remove_tome(sd_model=p.sd_model)
+
         # restore opts to original state
         if p.override_settings_restore_afterwards:
             for k, v in stored_opts.items():
@@ -792,10 +803,12 @@ def old_hires_fix_first_pass_dimensions(width, height):
 class StableDiffusionProcessingTxt2Img(StableDiffusionProcessing):
     sampler = None
 
-    def __init__(self, enable_hr: bool = False, denoising_strength: float = 0.75, firstphase_width: int = 0, firstphase_height: int = 0, hr_sampler: str = None, hr_cfg: float = 0.0, hr_scale: float = 2.0, hr_upscaler: str = None, hr_second_pass_steps: int = 0, hr_resize_x: int = 0, hr_resize_y: int = 0, **kwargs):
+    def __init__(self, enable_hr: bool = False, denoising_strength: float = 0.75, firstphase_width: int = 0, firstphase_height: int = 0, enable_tome: bool = False, enable_hr_tome: bool = False, hr_sampler: str = None, hr_cfg: float = 0.0, hr_scale: float = 2.0, hr_upscaler: str = None, hr_second_pass_steps: int = 0, hr_resize_x: int = 0, hr_resize_y: int = 0, **kwargs):
         super().__init__(**kwargs)
         self.enable_hr = enable_hr
         self.denoising_strength = denoising_strength
+        self.enable_tome = enable_tome
+        self.enable_hr_tome = enable_hr_tome
         self.hr_sampler = hr_sampler
         self.hr_cfg = hr_cfg
         self.hr_scale = hr_scale
@@ -973,7 +986,11 @@ class StableDiffusionProcessingTxt2Img(StableDiffusionProcessing):
         # GC now before running the next img2img to prevent running out of memory
         x = None
         devices.torch_gc()
-        
+
+        if self.enable_hr_tome:
+            print("Applying ToMe patch...")
+            apply_tome(self.sd_model, hires=True)
+
         cfg_scale_bak = self.cfg_scale
         if self.hr_cfg != 0:
             self.cfg_scale = self.hr_cfg
@@ -983,6 +1000,10 @@ class StableDiffusionProcessingTxt2Img(StableDiffusionProcessing):
             steps=None
         
         samples = self.sampler.sample_img2img(self, samples, noise, conditioning, unconditional_conditioning, steps=steps, image_conditioning=image_conditioning)
+
+        if self.enable_hr_tome:
+            print("Removing ToMe patch...")
+            remove_tome(self.sd_model)
 
         self.cfg_scale = cfg_scale_bak
         self.is_hr_pass = False
@@ -1146,3 +1167,4 @@ class StableDiffusionProcessingImg2Img(StableDiffusionProcessing):
         devices.torch_gc()
 
         return samples
+    

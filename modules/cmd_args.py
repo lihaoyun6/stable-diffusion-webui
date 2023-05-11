@@ -10,6 +10,7 @@ parser.add_argument("--skip-python-version-check", action='store_true', help="la
 parser.add_argument("--skip-torch-cuda-test", action='store_true', help="launch.py argument: do not check if CUDA is able to work properly")
 parser.add_argument("--reinstall-xformers", action='store_true', help="launch.py argument: install the appropriate version of xformers even if you have some version already installed")
 parser.add_argument("--reinstall-torch", action='store_true', help="launch.py argument: install the appropriate version of torch even if you have some version already installed")
+parser.add_argument("--reinstall-tomesd", action='store_true', help="launch.py argument: install the appropriate version of tomesd even if you have some version already installed")
 parser.add_argument("--update-check", action='store_true', help="launch.py argument: chck for updates at startup")
 parser.add_argument("--tests", type=str, default=None, help="launch.py argument: run tests in the specified directory")
 parser.add_argument("--no-tests", action='store_true', help="launch.py argument: do not run tests even if --tests option is specified")

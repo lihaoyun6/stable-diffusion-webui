@@ -290,6 +290,9 @@ def prepare_environment():
     if not is_installed("pyngrok") and args.ngrok:
         run_pip("install pyngrok", "ngrok")
 
+    if args.reinstall_tomesd or not is_installed("tomesd"):
+        run_pip("install tomesd", "tomesd")
+
     os.makedirs(os.path.join(script_path, dir_repos), exist_ok=True)
 
     git_clone(stable_diffusion_repo, repo_dir('stable-diffusion-stability-ai'), "Stable Diffusion", stable_diffusion_commit_hash)
@@ -361,3 +364,4 @@ def start():
 if __name__ == "__main__":
     prepare_environment()
     start()
+    

@@ -66,6 +66,9 @@ if cmd_opts.ngrok is not None:
 def gr_show(visible=True):
     return {"visible": visible, "__type__": "update"}
 
+def gr_show2(visible=True):
+    return [{"visible": visible, "__type__": "update"}, {"visible": visible, "__type__": "update"}]
+
 
 sample_img2img = "assets/stable-samples/img2img/sketch-mountains-input.jpg"
 sample_img2img = sample_img2img if os.path.exists(sample_img2img) else None
@@ -493,7 +496,7 @@ def create_ui():
                 for category in ordered_ui_categories():
                     if category == "sampler":
                         steps, sampler_index = create_sampler_and_steps_selection(samplers, "txt2img")
-
+                            
                     elif category == "dimensions":
                         with FormRow():
                             with gr.Column(elem_id="txt2img_column_size", scale=4):
@@ -519,6 +522,8 @@ def create_ui():
                             restore_faces = gr.Checkbox(label='Restore faces', value=False, visible=len(shared.face_restorers) > 1, elem_id="txt2img_restore_faces")
                             tiling = gr.Checkbox(label='Tiling', value=False, elem_id="txt2img_tiling")
                             enable_hr = gr.Checkbox(label='Hires. fix', value=False, elem_id="txt2img_enable_hr")
+                            enable_tome = gr.Checkbox(label='ToMe for txt2img', value=False, elem_id="txt2img_enable_tome", interactive=True)
+                            enable_hr_tome = gr.Checkbox(visible=False, label='ToMe for Hires. fix', value=False, elem_id="txt2img_enable_hr_tome", interactive=True)
                             hr_final_resolution = FormHTML(value="", elem_id="txtimg_hr_finalres", label="Upscaled resolution", interactive=False)
 
                     elif category == "hires_fix":
@@ -584,6 +589,8 @@ def create_ui():
                     hr_sampler_index,
                     restore_faces,
                     tiling,
+                    enable_tome,
+                    enable_hr_tome,
                     batch_count,
                     batch_size,
                     cfg_scale,
@@ -641,9 +648,9 @@ def create_ui():
             )
 
             enable_hr.change(
-                fn=lambda x: gr_show(x),
+                fn=lambda x: gr_show2(x),
                 inputs=[enable_hr],
-                outputs=[hr_options],
+                outputs=[hr_options, enable_hr_tome],
                 show_progress = False,
             )
 
@@ -654,6 +661,8 @@ def create_ui():
                 (sampler_index, "Sampler"),
                 (hr_sampler_index, "Hires sampler"),
                 (restore_faces, "Face restoration"),
+                (enable_tome, "Enable Tome for txt2img"),
+                (enable_hr_tome, "Enable Tome for Hires. fix only"),
                 (cfg_scale, "CFG scale"),
                 (seed, "Seed"),
                 (width, "Size-1"),
@@ -863,6 +872,7 @@ def create_ui():
                         with FormRow(elem_classes="checkboxes-row", variant="compact"):
                             restore_faces = gr.Checkbox(label='Restore faces', value=False, visible=len(shared.face_restorers) > 1, elem_id="img2img_restore_faces")
                             tiling = gr.Checkbox(label='Tiling', value=False, elem_id="img2img_tiling")
+                            enable_tome = gr.Checkbox(label='ToMe for img2img', value=False, elem_id="txt2img_enable_tome", interactive=True)
 
                     elif category == "batch":
                         if not opts.dimensions_and_batch_together:
@@ -946,6 +956,7 @@ def create_ui():
                     inpainting_fill,
                     restore_faces,
                     tiling,
+                    enable_tome,
                     batch_count,
                     batch_size,
                     cfg_scale,
@@ -1050,6 +1061,7 @@ def create_ui():
                 (steps, "Steps"),
                 (sampler_index, "Sampler"),
                 (restore_faces, "Face restoration"),
+                (enable_tome, "Enable ToMe for img2img"),
                 (cfg_scale, "CFG scale"),
                 (image_cfg_scale, "Image CFG scale"),
                 (seed, "Seed"),
