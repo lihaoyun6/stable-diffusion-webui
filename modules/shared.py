@@ -464,7 +464,15 @@ options_templates.update(options_section(('token_merging', 'Token Merging'), {
         0.5, "Merging Ratio (for Hires. fix)",
         gr.Slider, {"minimum": 0, "maximum": 0.9, "step": 0.1}
     ),
-    # More advanced/niche settings:
+    "token_merging_maximum_down_sampling": OptionInfo(1, "Maximum down sampling", gr.Radio, lambda: {"choices": [1, 2, 4, 8]}),
+    "token_merging_stride_x": OptionInfo(
+        2, "Stride - X",
+        gr.Slider, {"minimum": 2, "maximum": 8, "step": 2}
+    ),
+    "token_merging_stride_y": OptionInfo(
+        2, "Stride - Y",
+        gr.Slider, {"minimum": 2, "maximum": 8, "step": 2}
+    ),
     "token_merging_random": OptionInfo(
         False, "Use random perturbations - Disable if you see werid artifacts",
         gr.Checkbox
@@ -480,15 +488,6 @@ options_templates.update(options_section(('token_merging', 'Token Merging'), {
     "token_merging_merge_mlp": OptionInfo(
         False, "Merge mlp",
         gr.Checkbox
-    ),
-    "token_merging_maximum_down_sampling": OptionInfo(1, "Maximum down sampling", gr.Radio, lambda: {"choices": [1, 2, 4, 8]}),
-    "token_merging_stride_x": OptionInfo(
-        2, "Stride - X",
-        gr.Slider, {"minimum": 2, "maximum": 8, "step": 2}
-    ),
-    "token_merging_stride_y": OptionInfo(
-        2, "Stride - Y",
-        gr.Slider, {"minimum": 2, "maximum": 8, "step": 2}
     )
 }))
 
