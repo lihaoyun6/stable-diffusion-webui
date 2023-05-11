@@ -63,11 +63,8 @@ if cmd_opts.ngrok is not None:
         )
 
 
-def gr_show(visible=True):
-    return {"visible": visible, "__type__": "update"}
-
-def gr_show2(visible=True):
-    return [{"visible": visible, "__type__": "update"}, {"visible": visible, "__type__": "update"}]
+def gr_show(visible=True, n=1):
+    return [{"visible": visible, "__type__": "update"}] * n
 
 
 sample_img2img = "assets/stable-samples/img2img/sketch-mountains-input.jpg"
@@ -648,7 +645,7 @@ def create_ui():
             )
 
             enable_hr.change(
-                fn=lambda x: gr_show2(x),
+                fn=lambda x: gr_show(x,n=2),
                 inputs=[enable_hr],
                 outputs=[hr_options, enable_hr_tome],
                 show_progress = False,
