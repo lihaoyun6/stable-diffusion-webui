@@ -11,7 +11,7 @@ Changes:
 4. Set the default version of `xformers` to 0.0.19 (you can use the cmd arg `--reinstall-xformers` to upgrade)  
 5. Add an option `Show "PNG Info" block in txt2img and img2img tabs (requires restart)` in `User interface` to allow users to embed pnginfo blocks into txt2img and img2img tabs  
 6. Add ToMe(tomesd) support for `txt2img`/`img2img` and can also be applied only to `Hires. fix`  
-7. Add an option `calculate target steps using improved formula` in `Stable Diffusion` to Uue formula $\log_{s}{20}\cdot ds$ to calculate the optimal target number of steps for Hires. fix 
+7. Add an option `calculate target steps using improved formula` in `Stable Diffusion` to use formula: $\log_{s}{20}\cdot ds$ to calculate the optimal target number of steps for Hires. fix 
 
 # Stable Diffusion web UI
 A browser interface based on Gradio library for Stable Diffusion.
