@@ -290,14 +290,7 @@ def create_toprow(is_img2img):
             with gr.Column(elem_id=f"{id_part}_pnginfo_container"):
                 with gr.Row().style(equal_height=True):
                     image = gr.Image(elem_id="_pnginfo_image", label="Source", source="upload", interactive=True, type="pil")
-            html = gr.HTML(visible=False)
-            png_generation_info = gr.Textbox(visible=False, elem_id="_pnginfo_generation_info")
-            html2 = gr.HTML(visible=False)
-            image.change(
-                fn=wrap_gradio_call(modules.extras.run_pnginfo),
-                inputs=[image],
-                outputs=[html,png_generation_info,html2],
-            )
+                    png_generation_info = gr.Textbox(visible=False, elem_id="_pnginfo_generation_info")
 
         with gr.Column(elem_id=f"{id_part}_prompt_container", scale=6):
             if shared.opts.embedded_pnginfo:
@@ -366,6 +359,34 @@ def create_toprow(is_img2img):
             with gr.Row(elem_id=f"{id_part}_styles_row"):
                 prompt_styles = gr.Dropdown(label="Styles", elem_id=f"{id_part}_styles", choices=[k for k, v in shared.prompt_styles.styles.items()], value=[], multiselect=True)
                 create_refresh_button(prompt_styles, shared.prompt_styles.reload, lambda: {"choices": [k for k, v in shared.prompt_styles.styles.items()]}, f"refresh_{id_part}_styles")
+
+            with gr.Row(elem_id=f"{id_part}_show_generation_info"):
+                show_info_text = gr.Button(value="Show PNG generation info")
+                hide_info_text = gr.Button(value="Hide PNG generation info",visible=False)
+
+    with gr.Row(variant='panel',elem_id=f"{id_part}_parameters_viewer",visible=False) as parameters_viewer:
+        html = gr.HTML(visible=False)
+        html2 = gr.HTML()
+
+        image.change(
+            fn=wrap_gradio_call(modules.extras.run_pnginfo),
+            inputs=[image],
+            outputs=[html,png_generation_info,html2],
+        )
+
+        show_info_text.click(
+            fn=lambda: ({"visible": True, "__type__": "update"}, {"visible": False, "__type__": "update"}, {"visible": True, "__type__": "update"}),
+            inputs=[],
+            outputs=[parameters_viewer, show_info_text, hide_info_text],
+            show_progress = False,
+        )
+
+        hide_info_text.click(
+            fn=lambda: ({"visible": False, "__type__": "update"}, {"visible": False, "__type__": "update"}, {"visible": True, "__type__": "update"}),
+            inputs=[],
+            outputs=[parameters_viewer, hide_info_text, show_info_text],
+            show_progress = False,
+        )
 
     return prompt, prompt_styles, negative_prompt, submit, button_interrogate, button_deepbooru, prompt_style_apply, save_style, paste, extra_networks_button, token_counter, token_button, negative_token_counter, negative_token_button, restore_progress_button
 
