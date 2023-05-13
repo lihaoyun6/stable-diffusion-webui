@@ -346,6 +346,8 @@ options_templates.update(options_section(('sd', "Stable Diffusion"), {
     "img2img_color_correction": OptionInfo(False, "Apply color correction to img2img results to match original colors."),
     "img2img_fix_steps": OptionInfo(False, "With img2img, do exactly the amount of steps the slider specifies (normally you'd do less with less denoising)."),
     "img2img_background_color": OptionInfo("#ffffff", "With img2img, fill image's transparent parts with this color.", ui_components.FormColorPicker, {}),
+    "hires_smart_steps": OptionInfo(False, "With hires fix, calculate target steps using improved formula (experimental feature)."),
+    "hires_smart_minsteps": OptionInfo(9, "Minimum steps for img2img phase of hires fix when improved formula is enabled", gr.Slider, {"minimum": 1, "maximum": 150, "step": 1}),
     "enable_quantization": OptionInfo(False, "Enable quantization in K samplers for sharper and cleaner results. This may change existing seeds. Requires restart to apply."),
     "enable_emphasis": OptionInfo(True, "Emphasis: use (text) to make model pay more attention to text and [text] to make it pay less attention"),
     "enable_batch_seeds": OptionInfo(True, "Make K-diffusion samplers produce same images in a batch as when making a single image"),

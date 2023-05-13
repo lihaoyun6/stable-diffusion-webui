@@ -902,9 +902,12 @@ class StableDiffusionProcessingTxt2Img(StableDiffusionProcessing):
                 if state.job_count == -1:
                     state.job_count = self.n_iter
                 
-                steps=self.hr_second_pass_steps or self.steps
+                steps = self.hr_second_pass_steps or self.steps
                 if not opts.img2img_fix_steps and self.hr_second_pass_steps == 0:
-                    steps=int(min(self.denoising_strength, 0.999) * steps)
+                    steps = int(min(self.denoising_strength, 0.999) * steps)
+                if opts.hires_smart_steps:
+                    steps = max(int(opts.hires_smart_minsteps), round(math.log(20,self.steps)*self.steps*self.denoising_strength))
+
                 shared.total_tqdm.updateTotal((self.steps + steps) * state.job_count)
                 state.job_count = state.job_count * 2
                 state.processing_has_refined_job_count = True
@@ -1015,9 +1018,13 @@ class StableDiffusionProcessingTxt2Img(StableDiffusionProcessing):
         if self.hr_cfg != 0:
             self.cfg_scale = self.hr_cfg
         
-        steps=self.hr_second_pass_steps or self.steps
+        steps = self.hr_second_pass_steps or self.steps
+
         if not opts.img2img_fix_steps and self.hr_second_pass_steps == 0:
-            steps=None
+            steps = None
+
+        if opts.hires_smart_steps:
+            steps = max(int(opts.hires_smart_minsteps), round(math.log(20,self.steps)*self.steps*self.denoising_strength))
         
         samples = self.sampler.sample_img2img(self, samples, noise, conditioning, unconditional_conditioning, steps=steps, image_conditioning=image_conditioning)
 
