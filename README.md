@@ -1,4 +1,3 @@
-<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=default"></script>
 # THIS IS A FORK
 
 Forked from https://github.com/AUTOMATIC1111/stable-diffusion-webui
