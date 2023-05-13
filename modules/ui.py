@@ -286,11 +286,13 @@ def create_toprow(is_img2img):
     id_part = "img2img" if is_img2img else "txt2img"
 
     with gr.Row(elem_id=f"{id_part}_toprow", variant="compact"):
+        with gr.Column(elem_id=f"{id_part}_pnginfo_container",visible=False) as embedded_pnginfo_container:
+            with gr.Row().style(equal_height=True):
+                image = gr.Image(elem_id="_pnginfo_image", label="Source", source="upload", interactive=True, type="pil")
+                png_generation_info = gr.Textbox(visible=False, elem_id="_pnginfo_generation_info")
+        
         if shared.opts.embedded_pnginfo:
-            with gr.Column(elem_id=f"{id_part}_pnginfo_container"):
-                with gr.Row().style(equal_height=True):
-                    image = gr.Image(elem_id="_pnginfo_image", label="Source", source="upload", interactive=True, type="pil")
-                    png_generation_info = gr.Textbox(visible=False, elem_id="_pnginfo_generation_info")
+            embedded_pnginfo_container.visible = True
 
         with gr.Column(elem_id=f"{id_part}_prompt_container", scale=6):
             if shared.opts.embedded_pnginfo:
@@ -360,9 +362,12 @@ def create_toprow(is_img2img):
                 prompt_styles = gr.Dropdown(label="Styles", elem_id=f"{id_part}_styles", choices=[k for k, v in shared.prompt_styles.styles.items()], value=[], multiselect=True)
                 create_refresh_button(prompt_styles, shared.prompt_styles.reload, lambda: {"choices": [k for k, v in shared.prompt_styles.styles.items()]}, f"refresh_{id_part}_styles")
 
-            with gr.Row(elem_id=f"{id_part}_show_generation_info"):
+            with gr.Row(elem_id=f"{id_part}_show_generation_info",visible=False) as pnginfo_buttons:
                 show_info_text = gr.Button(value="Show PNG generation info")
                 hide_info_text = gr.Button(value="Hide PNG generation info",visible=False)
+
+            if shared.opts.embedded_pnginfo:
+                pnginfo_buttons.visible = True
 
     with gr.Row(variant='panel',elem_id=f"{id_part}_parameters_viewer",visible=False) as parameters_viewer:
         html = gr.HTML(visible=False)
@@ -2020,3 +2025,4 @@ def setup_ui_api(app):
     app.add_api_route("/internal/quicksettings-hint", quicksettings_hint, methods=["GET"], response_model=List[QuicksettingsHint])
 
     app.add_api_route("/internal/ping", lambda: {}, methods=["GET"])
+    
