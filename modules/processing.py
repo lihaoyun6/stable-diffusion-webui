@@ -902,11 +902,12 @@ class StableDiffusionProcessingTxt2Img(StableDiffusionProcessing):
                 if state.job_count == -1:
                     state.job_count = self.n_iter
                 
-                steps = self.hr_second_pass_steps or self.steps
-                if not opts.img2img_fix_steps and self.hr_second_pass_steps == 0:
-                    steps = int(min(self.denoising_strength, 0.999) * steps)
-                if opts.hires_smart_steps:
-                    steps = max(int(opts.hires_smart_minsteps), round(math.log(20,self.steps)*self.steps*self.denoising_strength))
+                steps = self.hr_second_pass_steps or int(min(self.denoising_strength, 0.999) * self.steps)
+                if opts.img2img_fix_steps:
+                    steps = self.hr_second_pass_steps or self.steps
+                else:
+                    if opts.hires_smart_steps:
+                        steps = self.hr_second_pass_steps or max(int(opts.hires_smart_minsteps), round(math.log(20,self.steps)*self.steps*self.denoising_strength))
 
                 shared.total_tqdm.updateTotal((self.steps + steps) * state.job_count)
                 state.job_count = state.job_count * 2
@@ -923,6 +924,12 @@ class StableDiffusionProcessingTxt2Img(StableDiffusionProcessing):
 
             if self.hr_upscaler is not None:
                 self.extra_generation_params["Hires upscaler"] = self.hr_upscaler
+
+            if self.enable_tome:
+                self.extra_generation_params["T2I ToMe"] = self.enable_tome
+
+            if self.enable_hr_tome:
+                self.extra_generation_params["Hires ToMe"] = self.enable_hr_tome
 
     def sample(self, conditioning, unconditional_conditioning, seeds, subseeds, subseed_strength, prompts):
         self.sampler = sd_samplers.create_sampler(self.sampler_name, self.sd_model)
@@ -1018,14 +1025,13 @@ class StableDiffusionProcessingTxt2Img(StableDiffusionProcessing):
         if self.hr_cfg != 0:
             self.cfg_scale = self.hr_cfg
         
-        steps = self.hr_second_pass_steps or self.steps
+        steps = self.hr_second_pass_steps or None
+        if opts.img2img_fix_steps:
+            steps = self.hr_second_pass_steps or self.steps
+        else:
+            if opts.hires_smart_steps:
+                steps = self.hr_second_pass_steps or max(int(opts.hires_smart_minsteps), round(math.log(20,self.steps)*self.steps*self.denoising_strength))
 
-        if not opts.img2img_fix_steps and self.hr_second_pass_steps == 0:
-            steps = None
-
-        if opts.hires_smart_steps:
-            steps = max(int(opts.hires_smart_minsteps), round(math.log(20,self.steps)*self.steps*self.denoising_strength))
-        
         samples = self.sampler.sample_img2img(self, samples, noise, conditioning, unconditional_conditioning, steps=steps, image_conditioning=image_conditioning)
 
         if self.enable_hr_tome:
@@ -1041,10 +1047,11 @@ class StableDiffusionProcessingTxt2Img(StableDiffusionProcessing):
 class StableDiffusionProcessingImg2Img(StableDiffusionProcessing):
     sampler = None
 
-    def __init__(self, init_images: list = None, resize_mode: int = 0, denoising_strength: float = 0.75, image_cfg_scale: float = None, mask: Any = None, mask_blur: int = 4, inpainting_fill: int = 0, inpaint_full_res: bool = True, inpaint_full_res_padding: int = 0, inpainting_mask_invert: int = 0, initial_noise_multiplier: float = None, **kwargs):
+    def __init__(self, init_images: list = None, enable_tome: bool = False, resize_mode: int = 0, denoising_strength: float = 0.75, image_cfg_scale: float = None, mask: Any = None, mask_blur: int = 4, inpainting_fill: int = 0, inpaint_full_res: bool = True, inpaint_full_res_padding: int = 0, inpainting_mask_invert: int = 0, initial_noise_multiplier: float = None, **kwargs):
         super().__init__(**kwargs)
 
         self.init_images = init_images
+        self.enable_tome: bool = enable_tome
         self.resize_mode: int = resize_mode
         self.denoising_strength: float = denoising_strength
         self.image_cfg_scale: float = image_cfg_scale if shared.sd_model.cond_stage_key == "edit" else None
@@ -1185,7 +1192,14 @@ class StableDiffusionProcessingImg2Img(StableDiffusionProcessing):
             self.extra_generation_params["Noise multiplier"] = self.initial_noise_multiplier
             x *= self.initial_noise_multiplier
 
-        samples = self.sampler.sample_img2img(self, self.init_latent, x, conditioning, unconditional_conditioning, image_conditioning=self.image_conditioning)
+        if self.enable_tome:
+            self.extra_generation_params["T2I ToMe"] = self.enable_tome
+
+        steps = None
+        if not opts.img2img_fix_steps and opts.hires_smart_steps:
+            steps = max(int(opts.hires_smart_minsteps), round(math.log(20,self.steps)*self.steps*self.denoising_strength))
+
+        samples = self.sampler.sample_img2img(self, self.init_latent, x, conditioning, unconditional_conditioning, steps=steps, image_conditioning=self.image_conditioning)
 
         if self.mask is not None:
             samples = samples * self.nmask + self.init_latent * self.mask
