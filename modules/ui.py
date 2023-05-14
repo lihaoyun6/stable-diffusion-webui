@@ -1932,6 +1932,8 @@ def javascript_html():
     head = f'<script type="text/javascript" src="{webpath(script_js)}"></script>\n'
 
     inline = f"{localization.localization_js(shared.opts.localization)};"
+    head += f'<script type="text/javascript">{inline}</script>\n'
+
     if cmd_opts.theme is not None:
         inline += f"set_theme('{cmd_opts.theme}');"
 
@@ -1940,8 +1942,6 @@ def javascript_html():
 
     for script in modules.scripts.list_scripts("javascript", ".mjs"):
         head += f'<script type="module" src="{webpath(script.path)}"></script>\n'
-
-    head += f'<script type="text/javascript">{inline}</script>\n'
 
     return head
 
